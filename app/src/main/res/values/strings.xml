@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">ToDo App</string>
+
+    //Todo List Screen
+    <string name="my_task">Мои дела</string>
+    <string name="completed">Выполнено —</string>
+    <string name="new_task">Новое</string>
+
+    //Create Task Screen
+    <string name="save">Сохранить</string>
+    <string name="selectDate">Сделать до</string>
+    <string name="delete">Удалить</string>
+    <string name="importance">Важность</string>
 </resources>

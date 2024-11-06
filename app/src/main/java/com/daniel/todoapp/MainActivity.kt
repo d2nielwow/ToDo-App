@@ -1,46 +1,44 @@
 package com.daniel.todoapp
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import com.daniel.todoapp.data.repository.TodoItemRepository
+import com.daniel.todoapp.data.usecase.CreateTodoItemUseCase
+import com.daniel.todoapp.data.usecase.GetTodoItemsUseCase
+import com.daniel.todoapp.data.usecase.RemoveTodoItemUseCase
+import com.daniel.todoapp.data.usecase.UpdateTodoItemUseCase
+import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
+import com.daniel.todoapp.presentation.viewmodel.ViewModelFactory
 import com.daniel.todoapp.ui.theme.ToDoAppTheme
 
 class MainActivity : ComponentActivity() {
+
+    private val repository = TodoItemRepository()
+    private val getTodoItemsUseCase = GetTodoItemsUseCase(repository)
+    private val createTodoItemUseCase = CreateTodoItemUseCase(repository)
+    private val removeTodoItemUseCase = RemoveTodoItemUseCase(repository)
+    private val updateTodoItemUseCase = UpdateTodoItemUseCase(repository)
+
+    private val viewModel: TodoViewModel by viewModels {
+        ViewModelFactory(
+            getTodoItemsUseCase,
+            createTodoItemUseCase,
+            removeTodoItemUseCase,
+            updateTodoItemUseCase,
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ToDoAppTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
-                }
+                TodoApp(viewModel)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ToDoAppTheme {
-        Greeting("Android")
     }
 }
