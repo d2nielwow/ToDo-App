@@ -112,7 +112,11 @@ fun CreateTodoScreen(
                         modifier = Modifier
                             .clickable(enabled = textState.value.isNotBlank()) {
                                 if (textState.value.isNotBlank()) {
-                                    viewModel.addItem(textState.value, importanceState.value, viewModel.deadLine)
+                                    viewModel.addItem(
+                                        textState.value,
+                                        importanceState.value,
+                                        viewModel.deadLine
+                                    )
                                     navController.popBackStack()
                                 } else {
                                     Toast
@@ -138,6 +142,7 @@ fun CreateTodoScreen(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color.White),
         ) {
 
@@ -249,6 +254,40 @@ fun CreateTodoScreen(
 
         Row(
             modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Text(
+                text = stringResource(id = R.string.changeTheme),
+                style = customTypography.bodyLarge,
+                modifier = Modifier
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Switch(checked = false,
+                onCheckedChange = {
+                },
+                colors = androidx.compose.material3.SwitchDefaults.colors(
+                    uncheckedThumbColor = colorResource(id = R.color.white),
+                    uncheckedTrackColor = colorResource(id = R.color.light_gray),
+                    checkedThumbColor = colorResource(id = R.color.white),
+                    checkedTrackColor = colorResource(id = R.color.light_blue)
+                )
+            )
+        }
+
+        Divider(
+            modifier = Modifier
+                .padding(vertical = 30.dp),
+            color = Color.LightGray
+        )
+
+        Row(
+            modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .wrapContentWidth()
                 .clickable(enabled = textState.value.isNotBlank()) { clearForm() },
@@ -336,14 +375,14 @@ fun ImportanceSelector(
                 .padding(end = 8.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.Gray.copy(alpha = 0.1f))
-                .clip(RoundedCornerShape(12.dp))
-                .padding(vertical = 5.dp, horizontal = 10.dp)
+                .padding(vertical = 2.dp, horizontal = 2.dp)
         ) {
 
             IconButton(
                 onClick = { onImportanceChange(Importance.NORMAL) },
                 modifier = Modifier
                     .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(
                         if (currentImportance == Importance.NORMAL) Color.White else Color.Transparent
                     )
@@ -360,6 +399,7 @@ fun ImportanceSelector(
                 onClick = { onImportanceChange(Importance.LOW) },
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .size(40.dp)
                     .background(
                         if (currentImportance == Importance.LOW) Color.White else Color.Transparent
@@ -377,6 +417,7 @@ fun ImportanceSelector(
                 onClick = { onImportanceChange(Importance.HIGH) },
                 modifier = Modifier
                     .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(
                         if (currentImportance == Importance.HIGH) Color.White else Color.Transparent
                     )

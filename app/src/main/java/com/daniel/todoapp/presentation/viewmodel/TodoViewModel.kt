@@ -69,6 +69,15 @@ class TodoViewModel(
         loadItems()
     }
 
+    fun onSwipeLeft(item: TodoItem) {
+        removeItem(item)
+    }
+
+    fun onSwipeRight(item: TodoItem) {
+        val updateItem = item.copy(isCompleted = true)
+        updateTaskCompletion(updateItem)
+    }
+
     fun updateTaskCompletion(item: TodoItem) {
         updateTodoItemUseCase.execute(item)
         loadItems()

@@ -35,7 +35,8 @@ fun ToDoAppTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val statusBarColor = colorResource(id = R.color.primary)
+    val statusBarColor = if (darkTheme) colorResource(id = R.color.dark) else colorResource(id = R.color.primary)
+    val navigationBarColor = if (darkTheme) colorResource(id = R.color.dark) else colorResource(id = R.color.primary)
 
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -49,8 +50,11 @@ fun ToDoAppTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            window.navigationBarColor = navigationBarColor.toArgb()
             window.statusBarColor = statusBarColor.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+
         }
     }
 

@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -51,8 +54,9 @@ import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
 import com.daniel.todoapp.ui.theme.Typography
 
-@RequiresApi(Build.VERSION_CODES.Q)
+
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun TodoListScreen(
     viewModel: TodoViewModel,
@@ -63,6 +67,7 @@ fun TodoListScreen(
     val completedCount = viewModel.completedCount
     val showCompletedTasks by viewModel.showCompletedTasks
     val listState = rememberLazyListState()
+
 
     Scaffold(
         modifier = Modifier
@@ -146,7 +151,8 @@ fun TodoListScreen(
                                 TaskItem(
                                     item = todoItems[index],
                                     onCheckedChange = { isChecked ->
-                                        val updateItem = todoItems[index].copy(isCompleted = isChecked)
+                                        val updateItem =
+                                            todoItems[index].copy(isCompleted = isChecked)
                                         viewModel.updateTaskCompletion(updateItem)
                                     }
                                 )
@@ -208,15 +214,24 @@ fun TaskItem(
         else -> Color.LightGray
     }
 
+    val showDialog = remember { mutableStateOf(false) }
+
+    if (showDialog.value) {
+        TaskDetailsDialog(
+            item = item,
+            onDismiss = { showDialog.value = false }
+        )
+    }
+
     val textColor = if (isChecked.value) colorResource(id = R.color.light_gray)
-        else Color.Black
+    else Color.Black
 
     val shouldShowImportance = !(isChecked.value && item.importance == Importance.HIGH)
 
     Row(
         modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -276,11 +291,47 @@ fun TaskItem(
             )
         }
 
-        IconButton(onClick = {}) {
-            Icon(painterResource(id = R.drawable.ic_info), contentDescription = null,
-                tint = colorResource(id = R.color.light_gray))
+        IconButton(onClick = {
+            showDialog.value = true
+        }) {
+            Icon(
+                painterResource(id = R.drawable.ic_info), contentDescription = null,
+                tint = colorResource(id = R.color.light_gray)
+            )
         }
     }
+}
+
+@Composable
+fun TaskDetailsDialog(
+    item: TodoItem,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Подробности задачи") },
+        text = {
+            Column {
+                Text("Текст задачи: ${item.text}")
+                item.deadLine?.let { Text("Срок: $it") }
+                Text("Важность: ${item.importance}")
+                Text("Статус: ${if (item.isCompleted) "Выполнена" else "Не выполнена"}")
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.blue),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Закрыть")
+            }
+        },
+        containerColor = Color.White,
+        textContentColor = colorResource(id = R.color.black)
+    )
 }
 
 @Composable
@@ -290,7 +341,7 @@ fun AppBarTitle(viewModel: TodoViewModel, showCompletedTasks: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
         Text(
