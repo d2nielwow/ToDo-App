@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <font android:font="@font/helvetica_light" />
+    <font app:font="@font/helvetica_light" />
+
+    <font android:font="@font/helvetica_medium" />
+    <font app:font="@font/helvetica_medium" />
+
+    <font android:font="@font/helvetica_roman" />
+    <font app:font="@font/helvetica_roman" />
+
+    <font android:font="@font/helvetica_thin" />
+    <font app:font="@font/helvetica_thin" />
+
+</font-family>
