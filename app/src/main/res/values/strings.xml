@@ -5,6 +5,15 @@
     <string name="my_task">Мои дела</string>
     <string name="completed">Выполнено —</string>
     <string name="new_task">Новое</string>
+    <string name="task_title">Текст задачи:</string>
+    <string name="importance_task">Важность</string>
+    <string name="task_completed">Выполнена</string>
+    <string name="task_noCompleted">Не Выполнена</string>
+    <string name="status">Статус</string>
+    <string name="task_description">Подробности задачи</string>
+    <string name="close">Закрыть</string>
+    <string name="retry">Повторить</string>
+
 
     //Create Task Screen
     <string name="save">Сохранить</string>

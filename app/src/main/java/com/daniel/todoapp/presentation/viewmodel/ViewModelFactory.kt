@@ -11,7 +11,8 @@ class ViewModelFactory(
     private val getTodoItemsUseCase: GetTodoItemsUseCase,
     private val createTodoItemUseCase: CreateTodoItemUseCase,
     private val removeTodoItemUseCase: RemoveTodoItemUseCase,
-    private val updateTodoItemUseCase: UpdateTodoItemUseCase
+    private val updateTodoItemUseCase: UpdateTodoItemUseCase,
+
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TodoViewModel::class.java)) {

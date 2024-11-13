@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +37,9 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -55,9 +59,12 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.daniel.todoapp.R
 import com.daniel.todoapp.domain.model.Importance
+import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
 import com.daniel.todoapp.ui.theme.customTypography
 import java.util.Calendar
+import java.util.Date
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,12 +78,21 @@ fun CreateTodoScreen(
     val textState = rememberSaveable { mutableStateOf("") }
     val importanceState = rememberSaveable { mutableStateOf(Importance.NORMAL) }
     val isSwitchChecked = rememberSaveable { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val deadLine by viewModel.deadLine.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     fun clearForm() {
         textState.value = ""
         importanceState.value = Importance.NORMAL
-        viewModel.updateDeadLine("")
+        viewModel.updateDeadLine(null)
         isSwitchChecked.value = false
+    }
+
+    LaunchedEffect(error) {
+        if (!error.isNullOrEmpty()) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        }
     }
 
     Column(
@@ -112,11 +128,17 @@ fun CreateTodoScreen(
                         modifier = Modifier
                             .clickable(enabled = textState.value.isNotBlank()) {
                                 if (textState.value.isNotBlank()) {
-                                    viewModel.addItem(
-                                        textState.value,
-                                        importanceState.value,
-                                        viewModel.deadLine
+                                    val newTodoItem = TodoItem(
+                                        id = UUID.randomUUID().toString(),
+                                        text = textState.value,
+                                        importance = importanceState.value.name,
+                                        deadLine = deadLine?.let { it.toLong() },
+                                        isCompleted = false,
+                                        createdAt = Date().time,
+                                        modifiedAt = null,
+                                        lastUpdatedBy = null
                                     )
+                                    viewModel.addTodoItem(newTodoItem)
                                     navController.popBackStack()
                                 } else {
                                     Toast
@@ -138,6 +160,10 @@ fun CreateTodoScreen(
                 containerColor = colorResource(id = R.color.primary)
             ),
         )
+
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
+        }
         Card(
             modifier = Modifier
                 .padding(16.dp)
@@ -238,12 +264,14 @@ fun CreateTodoScreen(
             )
         }
 
-        if (viewModel.deadLine.isNotBlank()) {
-            Text(
-                modifier = Modifier.padding(start = 16.dp),
-                color = colorResource(id = R.color.blue),
-                text = viewModel.deadLine,
-            )
+        if (deadLine?.isNotBlank() == true) {
+            deadLine?.let {
+                Text(
+                    modifier = Modifier.padding(start = 16.dp),
+                    color = colorResource(id = R.color.blue),
+                    text = it,
+                )
+            }
         }
 
         Divider(

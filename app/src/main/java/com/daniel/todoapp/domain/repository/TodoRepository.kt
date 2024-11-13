@@ -1,10 +1,12 @@
 package com.daniel.todoapp.domain.repository
 
 import com.daniel.todoapp.domain.model.TodoItem
+import com.daniel.todoapp.domain.model.TodoListResponse
 
 interface TodoRepository {
-    fun getAllItems(): List<TodoItem>
-    fun addItem(item: TodoItem)
-    fun removeItem(item: TodoItem)
-    fun updateItem(item: TodoItem)
+    suspend fun getAllItems(): TodoListResponse
+    suspend fun addItem(item: TodoItem, revision: Int): TodoListResponse
+    suspend fun removeItem(item: TodoItem, revision: Int): TodoListResponse
+    suspend fun updateItem(item: TodoItem, revision: Int): TodoListResponse
+    suspend fun patchTodoList(list: List<TodoItem>, revision: Int): TodoListResponse
 }

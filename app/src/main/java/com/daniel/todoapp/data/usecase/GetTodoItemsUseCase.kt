@@ -1,8 +1,10 @@
 package com.daniel.todoapp.data.usecase
 
 import com.daniel.todoapp.domain.repository.TodoRepository
-import com.daniel.todoapp.domain.model.TodoItem
+import com.daniel.todoapp.domain.model.TodoListResponse
 
 class GetTodoItemsUseCase(private val repository: TodoRepository) {
-    fun execute(): List<TodoItem> = repository.getAllItems()
+    suspend fun execute() : TodoListResponse {
+        return repository.getAllItems()
+    }
 }

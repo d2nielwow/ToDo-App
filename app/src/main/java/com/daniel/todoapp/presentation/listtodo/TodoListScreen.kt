@@ -28,10 +28,15 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +58,9 @@ import com.daniel.todoapp.domain.model.Importance
 import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
 import com.daniel.todoapp.ui.theme.Typography
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,10 +71,12 @@ fun TodoListScreen(
     navController: NavHostController,
 ) {
 
-    val todoItems by viewModel.todoItems
-    val completedCount = viewModel.completedCount
-    val showCompletedTasks by viewModel.showCompletedTasks
+    val todoItems by viewModel.todoItems.collectAsState()
+    val completedCount = todoItems.count() {it.isCompleted}
+    val showCompletedTasks by viewModel.showCompletedTasks.collectAsState()
     val listState = rememberLazyListState()
+    val errorState by viewModel.error.collectAsState()
+
 
 
     Scaffold(
@@ -144,19 +154,18 @@ fun TodoListScreen(
                         modifier = Modifier
                             .background(Color.White)
                     ) {
-
-                        items(todoItems.size) { index ->
-                            val item = todoItems[index]
-                            if (item.isCompleted && showCompletedTasks || !item.isCompleted) {
+                        val filteredItems = todoItems.filter {
+                            it.isCompleted && showCompletedTasks || !it.isCompleted
+                        }
+                        items(filteredItems.size) { index ->
+                            val item = filteredItems[index]
                                 TaskItem(
-                                    item = todoItems[index],
+                                    item = item,
                                     onCheckedChange = { isChecked ->
-                                        val updateItem =
-                                            todoItems[index].copy(isCompleted = isChecked)
-                                        viewModel.updateTaskCompletion(updateItem)
+                                        val updateItem = item.copy(isCompleted = isChecked)
+                                        viewModel.updateTodoItem(updateItem)
                                     }
                                 )
-                            }
                         }
                     }
 
@@ -192,6 +201,14 @@ fun TodoListScreen(
             }
         }
     )
+    if (errorState.isNullOrEmpty()) {
+        errorState?.let {
+            SnackbarWithRetry(
+                errorMessage = it,
+                onRetry = {viewModel.retryLastAction()}
+            )
+        }
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -205,12 +222,21 @@ fun TaskItem(
         mutableStateOf(item.isCompleted)
     }
 
+    val importanceEnum = try {
+        Importance.valueOf(item.importance)
+    } catch (e: IllegalArgumentException) {
+        Importance.NORMAL
+    }
+
     val checkboxColor = when {
-        item.importance == Importance.HIGH && !isChecked.value -> Color.Red
+        importanceEnum == Importance.HIGH && !isChecked.value -> Color.Red
+        importanceEnum == Importance.LOW && !isChecked.value -> Color.Green
         else -> colorResource(id = R.color.light_gray)
     }
-    val importanceColor = when (item.importance) {
+
+    val importanceColor = when (importanceEnum) {
         Importance.HIGH -> Color.Red
+        Importance.LOW -> Color.Green
         else -> Color.LightGray
     }
 
@@ -226,7 +252,7 @@ fun TaskItem(
     val textColor = if (isChecked.value) colorResource(id = R.color.light_gray)
     else Color.Black
 
-    val shouldShowImportance = !(isChecked.value && item.importance == Importance.HIGH)
+    val shouldShowImportance = importanceEnum != Importance.NORMAL || !isChecked.value
 
     Row(
         modifier = Modifier
@@ -249,8 +275,8 @@ fun TaskItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        if (shouldShowImportance && item.importance != Importance.NORMAL) {
-            val importanceIcon = when (item.importance) {
+        if (shouldShowImportance) {
+            val importanceIcon = when (importanceEnum) {
                 Importance.LOW -> R.drawable.ic_importance_low
                 Importance.HIGH -> R.drawable.ic_importance_high
                 else -> R.drawable.ic_importance_no
@@ -283,9 +309,11 @@ fun TaskItem(
         }
 
         item.deadLine?.let { deadline ->
+            val dateFormat = SimpleDateFormat("dd.MM.yyy", Locale.getDefault())
+            val formattedDate = Date(deadline).let { dateFormat.format(it) }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = deadline,
+                text = "Срок: $formattedDate",
                 color = colorResource(id = R.color.blue),
                 style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal),
             )
@@ -309,7 +337,7 @@ fun TaskDetailsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Подробности задачи") },
+        title = { Text(stringResource(R.string.task_description)) },
         text = {
             Column {
                 Text("Текст задачи: ${item.text}")
@@ -326,12 +354,29 @@ fun TaskDetailsDialog(
                     contentColor = Color.White
                 )
             ) {
-                Text("Закрыть")
+                Text(stringResource(R.string.close))
             }
         },
         containerColor = Color.White,
         textContentColor = colorResource(id = R.color.black)
     )
+}
+
+@Composable
+fun SnackbarWithRetry(errorMessage: String, onRetry: () -> Unit) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errorMessage) {
+        snackbarHostState.showSnackbar(
+            message = errorMessage,
+            actionLabel = "Повторить"
+        ).also {
+            if (it == SnackbarResult.ActionPerformed) {
+                onRetry()
+            }
+        }
+    }
+    SnackbarHost(hostState = snackbarHostState)
 }
 
 @Composable
