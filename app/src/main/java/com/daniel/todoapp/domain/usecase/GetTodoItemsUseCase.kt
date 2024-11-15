@@ -1,4 +1,4 @@
-package com.daniel.todoapp.data.usecase
+package com.daniel.todoapp.domain.usecase
 
 import com.daniel.todoapp.domain.repository.TodoRepository
 import com.daniel.todoapp.domain.model.TodoListResponse

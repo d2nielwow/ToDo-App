@@ -1,26 +1,32 @@
 package com.daniel.todoapp.presentation.viewmodel
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.daniel.todoapp.data.api.RetrofitClient
-import com.daniel.todoapp.data.repository.TodoItemRepository
-import com.daniel.todoapp.data.usecase.CreateTodoItemUseCase
-import com.daniel.todoapp.data.usecase.GetTodoItemsUseCase
-import com.daniel.todoapp.data.usecase.RemoveTodoItemUseCase
-import com.daniel.todoapp.data.usecase.UpdateTodoItemUseCase
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.daniel.todoapp.data.network.UpdateDataWorker
+import com.daniel.todoapp.domain.usecase.CreateTodoItemUseCase
+import com.daniel.todoapp.domain.usecase.GetTodoItemsUseCase
+import com.daniel.todoapp.domain.usecase.RemoveTodoItemUseCase
+import com.daniel.todoapp.domain.usecase.UpdateTodoItemUseCase
 import com.daniel.todoapp.domain.model.TodoItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 
 class TodoViewModel(
+    application: Application,
     private val getTodoItemsUseCase: GetTodoItemsUseCase,
     private val createTodoItemUseCase: CreateTodoItemUseCase,
     private val removeTodoItemUseCase: RemoveTodoItemUseCase,
     private val updateTodoItemUseCase: UpdateTodoItemUseCase
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _todoItems = MutableStateFlow<List<TodoItem>>(emptyList())
     val todoItems: StateFlow<List<TodoItem>> = _todoItems
@@ -35,21 +41,39 @@ class TodoViewModel(
     private val _showCompletedTasks = MutableStateFlow(false)
     val showCompletedTasks: StateFlow<Boolean> = _showCompletedTasks
 
-    private val _deadLine = MutableStateFlow<String?>(null)
-    val deadLine: StateFlow<String?> = _deadLine
+    private val _deadLine = MutableStateFlow<Long?>(null)
+    val deadLine: StateFlow<Long?> = _deadLine
 
-    private val repository = TodoItemRepository(RetrofitClient.api)
-
-    private var lastTodoItem: TodoItem? = null
+    var lastTodoItem: TodoItem? = null
 
 
     private var currentRevision: Int = 0
 
     init {
+        startPeriodUpdate()
         loadTodoItems()
     }
 
-    fun updateDeadLine(date: String?) {
+    private fun startPeriodUpdate() {
+
+        val inputData = workDataOf(
+            "item_id" to "some_id",
+            "revision" to 0
+        )
+
+        val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateDataWorker>(8, TimeUnit.HOURS)
+            .setInitialDelay(10, TimeUnit.MINUTES)
+            .setInputData(inputData)
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueueUniquePeriodicWork(
+            "updateTodoItems",
+            ExistingPeriodicWorkPolicy.KEEP,
+            updateWorkRequest
+        )
+    }
+
+    fun updateDeadLine(date: Long?) {
         _deadLine.value = date
     }
 
@@ -74,18 +98,18 @@ class TodoViewModel(
         _showCompletedTasks.value = !_showCompletedTasks.value
     }
 
-    fun addTodoItemWithRetry(item: TodoItem) {
-        viewModelScope.launch {
-            try {
-                repository.addItemWithRetry(item)
-                val response = repository.getAllItems()
-                _todoItems.value = response.list
-            } catch (e: Exception) {
-                _error.value = "Не удалось добавить задачу. Попробуйте еще раз."
-                Log.e("TodoViewModel", "Error adding task", e)
-            }
-        }
-    }
+//    fun addTodoItemWithRetry(item: TodoItem) {
+//        viewModelScope.launch {
+//            try {
+//                repository.addItemWithRetry(item)
+//                val response = repository.getAllItems()
+//                _todoItems.value = response.list
+//            } catch (e: Exception) {
+//                _error.value = "Не удалось добавить задачу. Попробуйте еще раз."
+//                Log.e("TodoViewModel", "Error adding task", e)
+//            }
+//        }
+//    }
 
     fun retryLastAction() {
         lastTodoItem?.let { addTodoItem(it) }
@@ -96,9 +120,15 @@ class TodoViewModel(
             _isLoading.value = true
             try {
                 val response = createTodoItemUseCase.execute(item, currentRevision)
+
+                if (response.status == "ok") {
+                    currentRevision = response.revision
+                    _todoItems.value = _todoItems.value + response.list
+                    _error.value = null
+                } else {
+                    _error.value = "Faile to add task"
+                }
                 Log.d("TodoViewModel", "Added Todo item: ${item.text}")
-                currentRevision = response.revision
-                _todoItems.value = response.list
                 lastTodoItem = null
                 _error.value = ""
             } catch (e: Exception) {

@@ -1,11 +1,11 @@
-package com.daniel.todoapp.data.usecase
+package com.daniel.todoapp.domain.usecase
 
 import com.daniel.todoapp.domain.repository.TodoRepository
 import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.domain.model.TodoListResponse
 
-class RemoveTodoItemUseCase(private val repository: TodoRepository) {
+class UpdateTodoItemUseCase(private val repository: TodoRepository) {
   suspend  fun execute(item: TodoItem, revision: Int): TodoListResponse {
-     return repository.removeItem(item, revision)
-  }
+      return  repository.updateItem(item, revision)
+    }
 }

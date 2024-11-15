@@ -19,6 +19,7 @@ interface TodoApiService {
 
     @POST("list")
     suspend fun addTodoItem(
+        @Header("X-Last-Known-Revision") revision: Int,
         @Body item: TodoItem
     ): Response<TodoItem>
 

@@ -62,8 +62,10 @@ import com.daniel.todoapp.domain.model.Importance
 import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
 import com.daniel.todoapp.ui.theme.customTypography
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -132,7 +134,7 @@ fun CreateTodoScreen(
                                         id = UUID.randomUUID().toString(),
                                         text = textState.value,
                                         importance = importanceState.value.name,
-                                        deadLine = deadLine?.let { it.toLong() },
+                                        deadLine = deadLine,
                                         isCompleted = false,
                                         createdAt = Date().time,
                                         modifiedAt = null,
@@ -149,7 +151,6 @@ fun CreateTodoScreen(
                                         )
                                         .show()
                                 }
-                                clearForm()
                             }
                             .alpha(if (textState.value.isNotBlank()) 1f else 0.5F)
                     )
@@ -225,11 +226,14 @@ fun CreateTodoScreen(
                     .clickable {
                         showDatePicker(context) { selectedDate ->
                             if (selectedDate.isNotEmpty()) {
-                                viewModel.updateDeadLine(selectedDate)
-                                isSwitchChecked.value = true
+                                val timestamp = parseDateToTimestamp(selectedDate)
+                                if (timestamp != null) {
+                                    viewModel.updateDeadLine(timestamp)
+                                    isSwitchChecked.value = true
+                                }
                             } else {
                                 isSwitchChecked.value = false
-                                viewModel.updateDeadLine("")
+                                viewModel.updateDeadLine(null)
                             }
                         }
                     }
@@ -243,16 +247,19 @@ fun CreateTodoScreen(
                     if (isChecked) {
                         showDatePicker(context) { selectDate ->
                             if (selectDate.isNotEmpty()) {
-                                viewModel.updateDeadLine(selectDate)
-                                isSwitchChecked.value = true
+                                val timestamp = parseDateToTimestamp(selectDate)
+                                if (timestamp != null) {
+                                    viewModel.updateDeadLine(timestamp)
+                                    isSwitchChecked.value = true
+                                }
                             } else {
                                 isSwitchChecked.value = false
-                                viewModel.updateDeadLine("")
+                                viewModel.updateDeadLine(null)
                             }
                         }
                     } else {
                         isSwitchChecked.value = false
-                        viewModel.updateDeadLine("")
+                        viewModel.updateDeadLine(null)
                     }
                 },
                 colors = androidx.compose.material3.SwitchDefaults.colors(
@@ -264,14 +271,15 @@ fun CreateTodoScreen(
             )
         }
 
-        if (deadLine?.isNotBlank() == true) {
-            deadLine?.let {
+        if (deadLine != null) {
+            val date = Date(deadLine!!)
+            val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("ru"))
+            val formattedDate = dateFormat.format(date)
                 Text(
                     modifier = Modifier.padding(start = 16.dp),
                     color = colorResource(id = R.color.blue),
-                    text = it,
+                    text = formattedDate,
                 )
-            }
         }
 
         Divider(
@@ -374,6 +382,16 @@ private fun getMonthName(month: Int): String {
         "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
     )
     return months[month]
+}
+
+private fun parseDateToTimestamp(dateStr: String): Long? {
+    val format = SimpleDateFormat("dd MMM yyyy", Locale("ru"))
+    return try {
+        val date = format.parse(dateStr)
+        date?.time
+    } catch (e: Exception) {
+        null
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
