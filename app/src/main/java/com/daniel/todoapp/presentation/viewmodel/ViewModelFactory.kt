@@ -3,6 +3,7 @@ package com.daniel.todoapp.presentation.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.daniel.todoapp.BackgroundTaskManager
 import com.daniel.todoapp.domain.usecase.CreateTodoItemUseCase
 import com.daniel.todoapp.domain.usecase.GetTodoItemsUseCase
 import com.daniel.todoapp.domain.usecase.RemoveTodoItemUseCase
@@ -14,6 +15,8 @@ class ViewModelFactory(
     private val createTodoItemUseCase: CreateTodoItemUseCase,
     private val removeTodoItemUseCase: RemoveTodoItemUseCase,
     private val updateTodoItemUseCase: UpdateTodoItemUseCase,
+    private val backgroundTaskManager: BackgroundTaskManager,
+
 
     ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -24,6 +27,7 @@ class ViewModelFactory(
                 createTodoItemUseCase,
                 removeTodoItemUseCase,
                 updateTodoItemUseCase,
+                backgroundTaskManager
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

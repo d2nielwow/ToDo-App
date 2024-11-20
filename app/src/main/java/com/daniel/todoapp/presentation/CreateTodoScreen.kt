@@ -1,4 +1,4 @@
-package com.daniel.todoapp.presentation.createtodo
+package com.daniel.todoapp.presentation
 
 import android.app.DatePickerDialog
 import android.content.Context
@@ -77,6 +77,7 @@ fun CreateTodoScreen(
 ) {
 
     val context = LocalContext.current
+
     val textState = rememberSaveable { mutableStateOf("") }
     val importanceState = rememberSaveable { mutableStateOf(Importance.NORMAL) }
     val isSwitchChecked = rememberSaveable { mutableStateOf(false) }
@@ -131,7 +132,9 @@ fun CreateTodoScreen(
                             .clickable(enabled = textState.value.isNotBlank()) {
                                 if (textState.value.isNotBlank()) {
                                     val newTodoItem = TodoItem(
-                                        id = UUID.randomUUID().toString(),
+                                        id = UUID
+                                            .randomUUID()
+                                            .toString(),
                                         text = textState.value,
                                         importance = importanceState.value.name,
                                         deadLine = deadLine,
@@ -142,14 +145,6 @@ fun CreateTodoScreen(
                                     )
                                     viewModel.addTodoItem(newTodoItem)
                                     navController.popBackStack()
-                                } else {
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            "Пожалуйста, заполните описание задачи",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
                                 }
                             }
                             .alpha(if (textState.value.isNotBlank()) 1f else 0.5F)
@@ -163,7 +158,11 @@ fun CreateTodoScreen(
         )
 
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(16.dp)
+            )
         }
         Card(
             modifier = Modifier
@@ -275,11 +274,11 @@ fun CreateTodoScreen(
             val date = Date(deadLine!!)
             val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("ru"))
             val formattedDate = dateFormat.format(date)
-                Text(
-                    modifier = Modifier.padding(start = 16.dp),
-                    color = colorResource(id = R.color.blue),
-                    text = formattedDate,
-                )
+            Text(
+                modifier = Modifier.padding(start = 16.dp),
+                color = colorResource(id = R.color.blue),
+                text = formattedDate,
+            )
         }
 
         Divider(
@@ -304,7 +303,8 @@ fun CreateTodoScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Switch(checked = false,
+            Switch(
+                checked = false,
                 onCheckedChange = {
                 },
                 colors = androidx.compose.material3.SwitchDefaults.colors(

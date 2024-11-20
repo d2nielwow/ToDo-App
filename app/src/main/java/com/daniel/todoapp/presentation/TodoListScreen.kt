@@ -1,11 +1,10 @@
-package com.daniel.todoapp.presentation.listtodo
+package com.daniel.todoapp.presentation
 
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,29 +17,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -82,9 +72,6 @@ fun TodoListScreen(
     val completedCount = todoItems.count() {it.isCompleted}
     val showCompletedTasks by viewModel.showCompletedTasks.collectAsState()
     val listState = rememberLazyListState()
-    val errorState by viewModel.error.collectAsState()
-
-
 
     Scaffold(
         modifier = Modifier
@@ -208,14 +195,6 @@ fun TodoListScreen(
             }
         }
     )
-    if (errorState.isNullOrEmpty()) {
-        errorState?.let {
-            SnackbarWithRetry(
-                errorMessage = it,
-                onRetry = {viewModel.retryLastAction()}
-            )
-        }
-    }
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -248,13 +227,6 @@ fun TaskItem(
     }
 
     val showDialog = remember { mutableStateOf(false) }
-
-    if (showDialog.value) {
-        TaskDetailsDialog(
-            item = item,
-            onDismiss = { showDialog.value = false }
-        )
-    }
 
     val textColor = if (isChecked.value) colorResource(id = R.color.light_gray)
     else Color.Black
@@ -335,38 +307,6 @@ fun TaskItem(
             )
         }
     }
-}
-
-@Composable
-fun TaskDetailsDialog(
-    item: TodoItem,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.task_description)) },
-        text = {
-            Column {
-                Text("Текст задачи: ${item.text}")
-                item.deadLine?.let { Text("Срок: $it") }
-                Text("Важность: ${item.importance}")
-                Text("Статус: ${if (item.isCompleted) "Выполнена" else "Не выполнена"}")
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.blue),
-                    contentColor = Color.White
-                )
-            ) {
-                Text(stringResource(R.string.close))
-            }
-        },
-        containerColor = Color.White,
-        textContentColor = colorResource(id = R.color.black)
-    )
 }
 
 @Composable

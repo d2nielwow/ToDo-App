@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.daniel.todoapp.data.api.RetrofitClient
 import com.daniel.todoapp.data.repository.TodoRepositoryImpl
+import com.daniel.todoapp.data.source.TodoApiSource
 import com.daniel.todoapp.domain.usecase.UpdateTodoItemUseCase
 import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.domain.repository.TodoRepository
@@ -14,8 +15,10 @@ import com.daniel.todoapp.domain.repository.TodoRepository
      workerParameters: WorkerParameters
  ): CoroutineWorker(appContext, workerParameters) {
 
+
      private val apiService = RetrofitClient.api
-     private val todoRepository: TodoRepository = TodoRepositoryImpl(apiService)
+     private val apiSource = TodoApiSource(apiService)
+     private val todoRepository: TodoRepository = TodoRepositoryImpl(apiSource)
      private val updateTodoItemUseCase = UpdateTodoItemUseCase(todoRepository)
 
      override suspend fun doWork(): Result {
@@ -39,10 +42,10 @@ import com.daniel.todoapp.domain.repository.TodoRepository
 
              val response = updateTodoItemUseCase.execute(item, revision)
 
-             if (response.status == "ok") {
-                 return Result.success()
+             return if (response.status == "ok") {
+                 Result.success()
              } else {
-                 return Result.failure()
+                 Result.failure()
              }
 
          } catch (e: Exception) {

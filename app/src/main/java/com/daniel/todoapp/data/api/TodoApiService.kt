@@ -1,6 +1,7 @@
 package com.daniel.todoapp.data.api
 
 import com.daniel.todoapp.domain.model.TodoItem
+import com.daniel.todoapp.domain.model.TodoItemResponse
 import com.daniel.todoapp.domain.model.TodoListResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -21,7 +22,7 @@ interface TodoApiService {
     suspend fun addTodoItem(
         @Header("X-Last-Known-Revision") revision: Int,
         @Body item: TodoItem
-    ): Response<TodoItem>
+    ): Response<TodoItemResponse>
 
     @PUT("list/{id}")
     suspend fun updateTodoItem(

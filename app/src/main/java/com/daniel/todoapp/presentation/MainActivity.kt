@@ -1,4 +1,4 @@
-package com.daniel.todoapp
+package com.daniel.todoapp.presentation
 
 import android.os.Build
 import android.os.Bundle
@@ -6,8 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import com.daniel.todoapp.BackgroundTaskManager
+import com.daniel.todoapp.TodoApp
 import com.daniel.todoapp.data.api.RetrofitClient
 import com.daniel.todoapp.data.repository.TodoRepositoryImpl
+import com.daniel.todoapp.di.AppModule
 import com.daniel.todoapp.domain.usecase.CreateTodoItemUseCase
 import com.daniel.todoapp.domain.usecase.GetTodoItemsUseCase
 import com.daniel.todoapp.domain.usecase.RemoveTodoItemUseCase
@@ -18,20 +21,16 @@ import com.daniel.todoapp.ui.theme.ToDoAppTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val apiService = RetrofitClient.api
-    private val repository = TodoRepositoryImpl(apiService)
-    private val getTodoItemsUseCase = GetTodoItemsUseCase(repository)
-    private val createTodoItemUseCase = CreateTodoItemUseCase(repository)
-    private val removeTodoItemUseCase = RemoveTodoItemUseCase(repository)
-    private val updateTodoItemUseCase = UpdateTodoItemUseCase(repository)
+    private val backgroundTaskManager = BackgroundTaskManager(applicationContext)
 
     private val viewModel: TodoViewModel by viewModels {
         ViewModelFactory(
             application,
-            getTodoItemsUseCase,
-            createTodoItemUseCase,
-            removeTodoItemUseCase,
-            updateTodoItemUseCase,
+            AppModule.getTodoItemsUseCase,
+            AppModule.createTodoItemUseCase,
+            AppModule.removeTodoItemUseCase,
+            AppModule.updateTodoItemUseCase,
+            backgroundTaskManager
         )
     }
 
