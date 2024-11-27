@@ -8,6 +8,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.daniel.todoapp.AppComponent
 import com.daniel.todoapp.BackgroundTaskManager
 import com.daniel.todoapp.data.network.UpdateDataWorker
 import com.daniel.todoapp.domain.usecase.CreateTodoItemUseCase
@@ -20,15 +21,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 
-class TodoViewModel(
+class TodoViewModel @Inject constructor(
     application: Application,
     private val getTodoItemsUseCase: GetTodoItemsUseCase,
     private val createTodoItemUseCase: CreateTodoItemUseCase,
     private val removeTodoItemUseCase: RemoveTodoItemUseCase,
     private val updateTodoItemUseCase: UpdateTodoItemUseCase,
-    private val backgroundTaskManager: BackgroundTaskManager,
+    backgroundTaskManager: BackgroundTaskManager,
 ) : AndroidViewModel(application) {
 
     private val _todoItems = MutableStateFlow<List<TodoItem>>(emptyList())

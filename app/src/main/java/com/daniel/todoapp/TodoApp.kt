@@ -14,7 +14,6 @@ import com.daniel.todoapp.presentation.TodoListScreen
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun TodoApp(viewModel: TodoViewModel) {
-
     val navController = rememberNavController()
     NavHost(navController, startDestination = "todoList") {
         composable("todoList") { TodoListScreen(viewModel, navController) }
