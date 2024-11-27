@@ -8,8 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
-import com.daniel.todoapp.presentation.createtodo.CreateTodoScreen
-import com.daniel.todoapp.presentation.listtodo.TodoListScreen
+import com.daniel.todoapp.presentation.CreateTodoScreen
+import com.daniel.todoapp.presentation.TodoListScreen
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable

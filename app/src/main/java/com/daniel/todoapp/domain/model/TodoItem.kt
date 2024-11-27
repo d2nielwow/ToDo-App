@@ -1,9 +1,6 @@
 package com.daniel.todoapp.domain.model
 
 import com.google.gson.annotations.SerializedName
-import java.io.Serializable
-import java.util.Date
-
 
 data class TodoItem(
     @SerializedName("id") val id: String,
@@ -16,14 +13,3 @@ data class TodoItem(
     @SerializedName("changed_at") val modifiedAt: Long? = null,
     @SerializedName("last_updated_by") val lastUpdatedBy: String? = null
 )
-
-
-data class TodoListResponse(
-  @SerializedName("status")  val status: String,
-  @SerializedName("list")  val list: List<TodoItem>,
-  @SerializedName("revision") val revision: Int
-)
-
-enum class Importance {
-    LOW, NORMAL, HIGH
-}
