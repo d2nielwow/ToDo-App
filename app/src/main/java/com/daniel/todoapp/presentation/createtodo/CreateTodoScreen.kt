@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +37,9 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -55,9 +59,14 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.daniel.todoapp.R
 import com.daniel.todoapp.domain.model.Importance
+import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
 import com.daniel.todoapp.ui.theme.customTypography
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,12 +80,21 @@ fun CreateTodoScreen(
     val textState = rememberSaveable { mutableStateOf("") }
     val importanceState = rememberSaveable { mutableStateOf(Importance.NORMAL) }
     val isSwitchChecked = rememberSaveable { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val deadLine by viewModel.deadLine.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     fun clearForm() {
         textState.value = ""
         importanceState.value = Importance.NORMAL
-        viewModel.updateDeadLine("")
+        viewModel.updateDeadLine(null)
         isSwitchChecked.value = false
+    }
+
+    LaunchedEffect(error) {
+        if (!error.isNullOrEmpty()) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        }
     }
 
     Column(
@@ -112,11 +130,17 @@ fun CreateTodoScreen(
                         modifier = Modifier
                             .clickable(enabled = textState.value.isNotBlank()) {
                                 if (textState.value.isNotBlank()) {
-                                    viewModel.addItem(
-                                        textState.value,
-                                        importanceState.value,
-                                        viewModel.deadLine
+                                    val newTodoItem = TodoItem(
+                                        id = UUID.randomUUID().toString(),
+                                        text = textState.value,
+                                        importance = importanceState.value.name,
+                                        deadLine = deadLine,
+                                        isCompleted = false,
+                                        createdAt = Date().time,
+                                        modifiedAt = null,
+                                        lastUpdatedBy = null
                                     )
+                                    viewModel.addTodoItem(newTodoItem)
                                     navController.popBackStack()
                                 } else {
                                     Toast
@@ -127,7 +151,6 @@ fun CreateTodoScreen(
                                         )
                                         .show()
                                 }
-                                clearForm()
                             }
                             .alpha(if (textState.value.isNotBlank()) 1f else 0.5F)
                     )
@@ -138,6 +161,10 @@ fun CreateTodoScreen(
                 containerColor = colorResource(id = R.color.primary)
             ),
         )
+
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
+        }
         Card(
             modifier = Modifier
                 .padding(16.dp)
@@ -199,11 +226,14 @@ fun CreateTodoScreen(
                     .clickable {
                         showDatePicker(context) { selectedDate ->
                             if (selectedDate.isNotEmpty()) {
-                                viewModel.updateDeadLine(selectedDate)
-                                isSwitchChecked.value = true
+                                val timestamp = parseDateToTimestamp(selectedDate)
+                                if (timestamp != null) {
+                                    viewModel.updateDeadLine(timestamp)
+                                    isSwitchChecked.value = true
+                                }
                             } else {
                                 isSwitchChecked.value = false
-                                viewModel.updateDeadLine("")
+                                viewModel.updateDeadLine(null)
                             }
                         }
                     }
@@ -217,16 +247,19 @@ fun CreateTodoScreen(
                     if (isChecked) {
                         showDatePicker(context) { selectDate ->
                             if (selectDate.isNotEmpty()) {
-                                viewModel.updateDeadLine(selectDate)
-                                isSwitchChecked.value = true
+                                val timestamp = parseDateToTimestamp(selectDate)
+                                if (timestamp != null) {
+                                    viewModel.updateDeadLine(timestamp)
+                                    isSwitchChecked.value = true
+                                }
                             } else {
                                 isSwitchChecked.value = false
-                                viewModel.updateDeadLine("")
+                                viewModel.updateDeadLine(null)
                             }
                         }
                     } else {
                         isSwitchChecked.value = false
-                        viewModel.updateDeadLine("")
+                        viewModel.updateDeadLine(null)
                     }
                 },
                 colors = androidx.compose.material3.SwitchDefaults.colors(
@@ -238,12 +271,15 @@ fun CreateTodoScreen(
             )
         }
 
-        if (viewModel.deadLine.isNotBlank()) {
-            Text(
-                modifier = Modifier.padding(start = 16.dp),
-                color = colorResource(id = R.color.blue),
-                text = viewModel.deadLine,
-            )
+        if (deadLine != null) {
+            val date = Date(deadLine!!)
+            val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("ru"))
+            val formattedDate = dateFormat.format(date)
+                Text(
+                    modifier = Modifier.padding(start = 16.dp),
+                    color = colorResource(id = R.color.blue),
+                    text = formattedDate,
+                )
         }
 
         Divider(
@@ -346,6 +382,16 @@ private fun getMonthName(month: Int): String {
         "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
     )
     return months[month]
+}
+
+private fun parseDateToTimestamp(dateStr: String): Long? {
+    val format = SimpleDateFormat("dd MMM yyyy", Locale("ru"))
+    return try {
+        val date = format.parse(dateStr)
+        date?.time
+    } catch (e: Exception) {
+        null
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)

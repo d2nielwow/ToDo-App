@@ -6,18 +6,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
-import com.daniel.todoapp.data.repository.TodoItemRepository
-import com.daniel.todoapp.data.usecase.CreateTodoItemUseCase
-import com.daniel.todoapp.data.usecase.GetTodoItemsUseCase
-import com.daniel.todoapp.data.usecase.RemoveTodoItemUseCase
-import com.daniel.todoapp.data.usecase.UpdateTodoItemUseCase
+import com.daniel.todoapp.data.api.RetrofitClient
+import com.daniel.todoapp.data.repository.TodoRepositoryImpl
+import com.daniel.todoapp.domain.usecase.CreateTodoItemUseCase
+import com.daniel.todoapp.domain.usecase.GetTodoItemsUseCase
+import com.daniel.todoapp.domain.usecase.RemoveTodoItemUseCase
+import com.daniel.todoapp.domain.usecase.UpdateTodoItemUseCase
 import com.daniel.todoapp.presentation.viewmodel.TodoViewModel
 import com.daniel.todoapp.presentation.viewmodel.ViewModelFactory
 import com.daniel.todoapp.ui.theme.ToDoAppTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val repository = TodoItemRepository()
+    private val apiService = RetrofitClient.api
+    private val repository = TodoRepositoryImpl(apiService)
     private val getTodoItemsUseCase = GetTodoItemsUseCase(repository)
     private val createTodoItemUseCase = CreateTodoItemUseCase(repository)
     private val removeTodoItemUseCase = RemoveTodoItemUseCase(repository)
@@ -25,6 +27,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: TodoViewModel by viewModels {
         ViewModelFactory(
+            application,
             getTodoItemsUseCase,
             createTodoItemUseCase,
             removeTodoItemUseCase,
