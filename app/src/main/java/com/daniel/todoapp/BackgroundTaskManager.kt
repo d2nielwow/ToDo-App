@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit
 class BackgroundTaskManager(
     private val context: Context
 ) {
+
     fun startPeriodicUpdate() {
         val inputData = workDataOf("item_id" to "some_id", "revision" to 0)
 

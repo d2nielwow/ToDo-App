@@ -4,8 +4,9 @@ import com.daniel.todoapp.data.api.TodoApiService
 import com.daniel.todoapp.domain.model.TodoItem
 import com.daniel.todoapp.domain.model.TodoItemResponse
 import com.daniel.todoapp.domain.model.TodoListResponse
+import javax.inject.Inject
 
-class TodoApiSource(private val apiService: TodoApiService) {
+class TodoApiSource @Inject constructor(private val apiService: TodoApiService) {
 
     suspend fun getTodoItems(): TodoListResponse {
         val response = apiService.getTodoItems()

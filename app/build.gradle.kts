@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
+
 }
 
 android {
@@ -61,8 +63,14 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation ("androidx.work:work-runtime-ktx:2.10.0")
 
+    implementation ("com.google.dagger:dagger:2.46.1")
+    implementation ("com.google.dagger:dagger-android-support:2.46.1")
+    kapt ("com.google.dagger:dagger-android-processor:2.46.1")
+    kapt ("com.google.dagger:dagger-compiler:2.46.1")
+
     implementation("androidx.core:core-ktx:1.10.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation(platform("androidx.compose:compose-bom:2023.08.00"))
     implementation("androidx.compose.ui:ui")
